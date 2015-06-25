@@ -22,12 +22,15 @@ Compile script.
 OPTIONS:
    -h   Show this message
    -d   Top level build dir
+   -S   Generate shared libv8 library (avoids crashes when multiple units link against it)
 EOF
 }
 
-while getopts :d: OPTION
+while getopts :Sd: OPTION
 do
    case $OPTION in
+       S)  SHARED_PLEASE=library=shared
+           ;;
        d)
            BUILD_DIR=$OPTARG
            ;;
@@ -64,8 +67,8 @@ else
   # do the build
   configs=( "debug" "release" )
   for c in "${configs[@]}"; do
-    make -j2 x64.$c V=1
-    make -j2 x64.$c V=1
+    make -j2 x64.$c V=1 $SHARED_PLEASE
+    make -j2 x64.$c V=1 $SHARED_PLEASE
 
     # combine all the static libraries into one called v8_full
     pushd out/x64.$c
@@ -90,8 +93,8 @@ else
     # do the build
     configs=( "debug" "release" )
     for c in "${configs[@]}"; do
-      make -j2 x64.$c V=1
-      make -j2 x64.$c V=1
+      make -j2 x64.$c V=1 $SHARED_PLEASE
+      make -j2 x64.$c V=1 $SHARED_PLEASE
 
       # combine all the static libraries into one called v8_full
       pushd out/x64.$c

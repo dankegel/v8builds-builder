@@ -1,6 +1,7 @@
 #!/bin/bash
-set -eo pipefail
 set -x
+set -e
+set -o pipefail
 
 # This goes through the entire build sequence
 
@@ -23,12 +24,15 @@ Build script.
 OPTIONS:
    -h   Show this message
    -r   Revision represented as a git tag version i.e. 4.5.73 (optional, builds latest version if omitted)
+   -S   Generate shared libv8 library (avoids crashes when multiple units link against it)
 EOF
 }
 
-while getopts :r: OPTION
+while getopts :Sr: OPTION
 do
    case $OPTION in
+       S)  SHARED_PLEASE=-S
+           ;;
        r)
            REVISION=$OPTARG
            ;;
@@ -57,8 +61,8 @@ fi
 $DIR/check_depot_tools.sh 2>&1 | tee $BUILD_DIR/check_depot_tools.log
 $DIR/check_deps.sh 2>&1 | tee $BUILD_DIR/check_deps.log
 $DIR/checkout.sh -r $REVISION -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/checkout.log
-$DIR/patch.sh -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/patch.log
-$DIR/compile.sh -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/compile.log
+$DIR/patch.sh $SHARED_PLEASE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/patch.log
+$DIR/compile.sh $SHARED_PLEASE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/compile.log
 $DIR/package.sh -r $REVISION -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/package.log
 
 # for extensibility

@@ -1,0 +1,13 @@
+diff --git a/tools/gyp/v8.gyp b/tools/gyp/v8.gyp
+index 7f08ee2..a10ec2a 100644
+--- a/tools/gyp/v8.gyp
++++ b/tools/gyp/v8.gyp
+@@ -108,7 +108,7 @@
+           'conditions': [
+             ['OS=="mac"', {
+               'xcode_settings': {
+-                'OTHER_LDFLAGS': ['-dynamiclib', '-all_load']
++                'OTHER_LDFLAGS': ['-dynamiclib', '-all_load', '-headerpad_max_install_names']
+               },
+             }],
+             ['soname_version!=""', {

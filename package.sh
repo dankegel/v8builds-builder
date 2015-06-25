@@ -72,6 +72,7 @@ mkdir -p $BUILDLABEL/bin $BUILDLABEL/include $BUILDLABEL/lib
 # find and copy everything that is not a library into bin
 find v8/out/x64.release* -maxdepth 1 -type f \
   -not -name *.so -not -name *.a -not -name *.jar -not -name *.lib \
+  -not -name *.dylib \
   -not -name *.isolated \
   -not -name *.state \
   -not -name *.ninja \
@@ -95,7 +96,7 @@ mv $BUILDLABEL/include/v8/include/* $BUILDLABEL/include
 rm -rf $BUILDLABEL/include/v8
 
 # find and copy libraries
-find v8/out -maxdepth 2 \( -name *.so -o -name *v8_full* -o -name *.jar \) \
+find v8/out -maxdepth 2 \( -name *.so -o -name '*.dylib' -o -name *v8_full* -o -name *.jar \) \
   -exec $CP --parents '{}' $BUILDLABEL/lib ';'
 mv $BUILDLABEL/lib/v8/out/* $BUILDLABEL/lib
 rmdir $BUILDLABEL/lib/v8/out $BUILDLABEL/lib/v8
