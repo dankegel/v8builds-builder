@@ -25,16 +25,26 @@ OPTIONS:
    -h   Show this message
    -r   Revision represented as a git tag version i.e. 4.5.73 (optional, builds latest version if omitted)
    -S   Generate shared libv8 library (avoids crashes when multiple units link against it)
+   -p   pickle source tree to given tarball, don't actually build
+   -P   unpickle source tree from given tarball instead of downloading
 EOF
 }
 
-while getopts :Sr: OPTION
+opt_pickle=false
+opt_unpickle=false
+while getopts :Sr:p:P: OPTION
 do
    case $OPTION in
        S)  SHARED_PLEASE=-S
            ;;
        r)
            REVISION=$OPTARG
+           ;;
+       p)  PICKLEFILE=$OPTARG
+           opt_pickle=true
+           ;;
+       P)  PICKLEFILE=$OPTARG
+           opt_unpickle=true
            ;;
        ?)
            usage
@@ -60,7 +70,17 @@ fi
 
 $DIR/check_depot_tools.sh 2>&1 | tee $BUILD_DIR/check_depot_tools.log
 $DIR/check_deps.sh 2>&1 | tee $BUILD_DIR/check_deps.log
-$DIR/checkout.sh -r $REVISION -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/checkout.log
+if $opt_unpickle
+then
+   tar -C $BUILD_DIR -xzf $PICKLEFILE
+else
+   $DIR/checkout.sh -r $REVISION -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/checkout.log
+fi
+if $opt_pickle
+then
+   tar -C $BUILD_DIR -czf $PICKLEFILE v8
+   exit 0
+fi
 $DIR/patch.sh $SHARED_PLEASE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/patch.log
 $DIR/compile.sh $SHARED_PLEASE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/compile.log
 $DIR/package.sh -r $REVISION -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/package.log
