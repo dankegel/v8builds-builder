@@ -27,7 +27,7 @@ OPTIONS:
 EOF
 }
 
-while getopts :d:r: OPTION
+while getopts :d:r:p:P: OPTION
 do
    case $OPTION in
        d)
@@ -35,6 +35,14 @@ do
            ;;
        r)
            REVISION=$OPTARG
+           ;;
+       p)  opt_pickle=-p
+           PICKLEFILE="$OPTARG"
+           # Don't know which OS you want to unpickle on, so grab them all
+           extra_args=--target_os=mac,win,linux
+           ;;
+       P)  opt_unpickle=-P
+           UNPICKLEFILE="$OPTARG"
            ;;
        ?)
            usage
@@ -53,11 +61,17 @@ if [ -z $REVISION ]; then
   REVISION=`retry git ls-remote --tags $REPO_URL | cut -f 2 | sed 's#refs/tags/##' | grep '^[0-9]' | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n | tail -1`
 fi
 
+# Speed up fetch by prepopulating with pickled tree
+if test x != x"$opt_unpickle"
+then
+   tar -C "$BUILD_DIR" -xzf "$UNPICKLEFILE"
+fi
+
 # gclient only works from the build directory
 pushd $BUILD_DIR
 
 # first fetch
-fetch v8
+fetch v8 $extra_args
 
 # check out the specific revision after fetch
 pushd v8
@@ -65,3 +79,8 @@ git checkout $REVISION
 popd
 
 popd
+
+if test x != x"$opt_pickle"
+then
+   tar -C $BUILD_DIR -czf $PICKLEFILE v8
+fi

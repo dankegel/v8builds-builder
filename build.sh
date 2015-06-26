@@ -22,11 +22,11 @@ usage:
 Build script.
 
 OPTIONS:
-   -h   Show this message
-   -r   Revision represented as a git tag version i.e. 4.5.73 (optional, builds latest version if omitted)
-   -S   Generate shared libv8 library (avoids crashes when multiple units link against it)
-   -p   pickle source tree to given tarball, don't actually build
-   -P   unpickle source tree from given tarball instead of downloading
+   -h    Show this message
+   -r    Revision represented as a git tag version i.e. 4.5.73 (optional, builds latest version if omitted)
+   -S    Generate shared libv8 library (avoids crashes when multiple units link against it)
+   -p TB pickle clean source tree to given tarball after downloading, don't actually build
+   -P TB unpickle clean source tree from given tarball before downloading (much faster)
 EOF
 }
 
@@ -40,11 +40,11 @@ do
        r)
            REVISION=$OPTARG
            ;;
-       p)  PICKLEFILE=$OPTARG
-           opt_pickle=true
+       p)  opt_pickle=-p
+           PICKLEFILE="$OPTARG"
            ;;
-       P)  PICKLEFILE=$OPTARG
-           opt_unpickle=true
+       P)  opt_unpickle="-P"
+           UNPICKLEFILE="$OPTARG"
            ;;
        ?)
            usage
@@ -70,15 +70,10 @@ fi
 
 $DIR/check_depot_tools.sh 2>&1 | tee $BUILD_DIR/check_depot_tools.log
 $DIR/check_deps.sh 2>&1 | tee $BUILD_DIR/check_deps.log
-if $opt_unpickle
+$DIR/checkout.sh -r $REVISION $opt_pickle $PICKLEFILE $opt_unpickle $UNPICKLEFILE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/checkout.log
+if test x != x"$opt_pickle"
 then
-   tar -C $BUILD_DIR -xzf $PICKLEFILE
-else
-   $DIR/checkout.sh -r $REVISION -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/checkout.log
-fi
-if $opt_pickle
-then
-   tar -C $BUILD_DIR -czf $PICKLEFILE v8
+   echo "Specified pickling, so not building"
    exit 0
 fi
 $DIR/patch.sh $SHARED_PLEASE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/patch.log
