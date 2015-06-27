@@ -38,8 +38,6 @@ do
            ;;
        p)  opt_pickle=-p
            PICKLEFILE="$OPTARG"
-           # Don't know which OS you want to unpickle on, so grab them all
-           extra_args=--target_os=mac,win,linux
            ;;
        P)  opt_unpickle=-P
            UNPICKLEFILE="$OPTARG"
@@ -71,7 +69,7 @@ fi
 pushd $BUILD_DIR
 
 # first fetch
-fetch v8 $extra_args
+fetch v8
 
 # check out the specific revision after fetch
 pushd v8

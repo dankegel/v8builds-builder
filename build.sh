@@ -30,8 +30,6 @@ OPTIONS:
 EOF
 }
 
-opt_pickle=false
-opt_unpickle=false
 while getopts :Sr:p:P: OPTION
 do
    case $OPTION in
