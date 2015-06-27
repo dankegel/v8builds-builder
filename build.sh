@@ -26,7 +26,7 @@ OPTIONS:
    -r    Revision represented as a git tag version i.e. 4.5.73 (optional, builds latest version if omitted)
    -S    Generate shared libv8 library (avoids crashes when multiple units link against it)
    -p TB pickle clean source tree to given tarball after downloading, don't actually build
-   -P TB unpickle clean source tree from given tarball before downloading (much faster)
+   -P TB unpickle clean source tree from given tarball instead of using fetch
 EOF
 }
 
@@ -69,8 +69,7 @@ fi
 $DIR/check_depot_tools.sh 2>&1 | tee $BUILD_DIR/check_depot_tools.log
 $DIR/check_deps.sh 2>&1 | tee $BUILD_DIR/check_deps.log
 $DIR/checkout.sh -r $REVISION $opt_pickle $PICKLEFILE $opt_unpickle $UNPICKLEFILE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/checkout.log
-if test x != x"$opt_pickle"
-then
+if ! [ -z "$opt_pickle" ]; then
    echo "Specified pickling, so not building"
    exit 0
 fi

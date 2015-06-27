@@ -59,17 +59,13 @@ if [ -z $REVISION ]; then
   REVISION=`retry git ls-remote --tags $REPO_URL | cut -f 2 | sed 's#refs/tags/##' | grep '^[0-9]' | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n | tail -1`
 fi
 
-# Speed up fetch by prepopulating with pickled tree
-if test x != x"$opt_unpickle"
-then
+if ! [ -z "$opt_unpickle" ]; then
    tar -C "$BUILD_DIR" -xzf "$UNPICKLEFILE"
+   pushd $BUILD_DIR
+else
+   pushd $BUILD_DIR
+   fetch v8
 fi
-
-# gclient only works from the build directory
-pushd $BUILD_DIR
-
-# first fetch
-fetch v8
 
 # check out the specific revision after fetch
 pushd v8
@@ -78,7 +74,6 @@ popd
 
 popd
 
-if test x != x"$opt_pickle"
-then
+if ! [ -z "$opt_pickle" ]; then
    tar -C $BUILD_DIR -czf $PICKLEFILE v8
 fi
