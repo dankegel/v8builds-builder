@@ -96,8 +96,15 @@ mv $BUILDLABEL/include/v8/include/* $BUILDLABEL/include
 rm -rf $BUILDLABEL/include/v8
 
 # find and copy libraries
-find v8/out -maxdepth 2 \( -name *.so -o -name '*.dylib' -o -name *v8_full* -o -name *.jar \) \
+find v8/out -maxdepth 3 \( -name *.so -o -name '*.dylib' -o -name *v8_full* -o -name *.jar \) \
   -exec $CP --parents '{}' $BUILDLABEL/lib ';'
+# shared library is awkwardly in a lib.target subdirectory
+for d in $BUILDLABEL/lib/v8/out/*
+do
+    mv $d/lib.target/* $d || true
+    rmdir $d/lib.target
+done
+find $BUILDLABEL -name '*.so' -ls
 mv $BUILDLABEL/lib/v8/out/* $BUILDLABEL/lib
 rmdir $BUILDLABEL/lib/v8/out $BUILDLABEL/lib/v8
 

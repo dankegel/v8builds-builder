@@ -70,13 +70,15 @@ else
   fi
 
   pushd v8
-  # patch the project to build standalone libs
-  if test x"$SHARED_PLEASE" = x
-  then
-      find . \( -name *.gyp -o  -name *.gypi \) -not -path *libyuv* -exec sed -i -e "s|\('type': 'static_library',\)|\1 'standalone_static_library': 1,|" '{}' ';'
+  # patch the project to build standalone libs instead of thin ones
+
+  # The libraries that are always built by gyp as static of some sort -- make them real
+  find . \( -name *.gyp -o  -name *.gypi \) -not -path *libyuv* -exec sed -i -e "s|\('type': 'static_library',\)|\1 'standalone_static_library': 1,|" '{}' ';'
+
+  # The libraries that are built by gyp as either static or shared.  If building static, make them real.
+  if [ -z "$SHARED_PLEASE" ]; then
+    find . \( -name *.gyp -o  -name *.gypi \) -exec sed -i -e "s|\('type': '<(component)',\)|\1 'standalone_static_library': 1,|" '{}' ';'
   fi
-  # for icu (leave these always static for now)
-  find . \( -name *.gyp -o  -name *.gypi \) -exec sed -i -e "s|\('type': '<(component)',\)|\1 'standalone_static_library': 1,|" '{}' ';'
   popd # v8
 fi
 

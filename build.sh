@@ -67,7 +67,11 @@ if [ -z $REVISION ]; then
 fi
 
 $DIR/check_depot_tools.sh 2>&1 | tee $BUILD_DIR/check_depot_tools.log
-$DIR/check_deps.sh 2>&1 | tee $BUILD_DIR/check_deps.log
+if [ -z "$DEB_BUILD_ARCH" ]; then
+   $DIR/check_deps.sh 2>&1 | tee $BUILD_DIR/check_deps.log
+else
+   echo "Inside debian package builder, let it enforce dependencies"
+fi
 $DIR/checkout.sh -r $REVISION $opt_pickle $PICKLEFILE $opt_unpickle $UNPICKLEFILE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/checkout.log
 if ! [ -z "$opt_pickle" ]; then
    echo "Specified pickling, so not building"

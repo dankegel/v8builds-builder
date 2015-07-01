@@ -1,0 +1,28 @@
+Source: libv8-qb-__API__
+Priority: optional
+Maintainer: Dan Kegel <dank@kegel.com>
+Build-Depends: build-essential,
+    bash,
+    curl,
+    debhelper,
+    g++,
+    git,
+    jq,
+    make,
+    openjdk-7-jdk,
+    python,
+    python-pip,
+    wget,
+    zip,
+Standards-Version: 3.9.3
+Section: libs
+Homepage: http://code.google.com/p/v8/
+
+Package: libv8-qb-__API__
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: V8 JavaScript engine - runtime library
+ V8 is a high performance JavaScript engine written in C++.  It is used
+ in the web browser Chromium.
+ .
+ This package provides the dynamic library for V8.

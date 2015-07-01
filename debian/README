@@ -1,0 +1,8 @@
+This is just a very simple packaging job using dh,
+but with a few details borrowed from
+git://anonscm.debian.org/collab-maint/libv8.git
+In particular, it uses the same version numbering system.
+
+The package name is libv8-qb-version ('quick build') to
+distinguish it from the official packages.
+

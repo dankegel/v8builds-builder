@@ -1,0 +1,5 @@
+libv8-qb-__VERSION__ (__VERSION__) trusty; urgency=low
+
+  * Initial packaging
+
+ -- Dan Kegel <dank@kegel.com>  Mon, 29 Jun 2015 10:09:15 -0700

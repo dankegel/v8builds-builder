@@ -28,8 +28,12 @@ EOF
 
 while getopts :Sd: OPTION
 do
-   case $OPTION in
-       S)  SHARED_PLEASE=library=shared
+    case $OPTION in
+       # can't build icu static and v8 shared, so just turn icu off for now to avoid conflicting with system icu
+       # Right fix would be to either build icu static or, better, use system icu.
+       S)
+           SHARED_PLEASE="library=shared i18nsupport=off"
+           #SHARED_PLEASE="library=shared use_system_icu=1"
            ;;
        d)
            BUILD_DIR=$OPTARG
@@ -45,6 +49,8 @@ if [ -z "$BUILD_DIR" ]; then
    usage
    exit 1
 fi
+
+configs=( "debug" "release" )
 
 # gclient only works from the build directory
 pushd $BUILD_DIR
@@ -65,8 +71,13 @@ else
   make clean || true
 
   # do the build
-  configs=( "debug" "release" )
   for c in "${configs[@]}"; do
+    if ! [ -z "$SHARED_PLEASE" ]; then
+      case $UNAME in
+      Darwin) echo "don't forget to use install_name_tool to set the install_name of each dylib when installing";;
+      esac
+    fi
+
     make -j2 x64.$c V=1 $SHARED_PLEASE
     make -j2 x64.$c V=1 $SHARED_PLEASE
 
@@ -91,7 +102,6 @@ else
     make clean || true
 
     # do the build
-    configs=( "debug" "release" )
     for c in "${configs[@]}"; do
       make -j2 x64.$c V=1 $SHARED_PLEASE
       make -j2 x64.$c V=1 $SHARED_PLEASE
