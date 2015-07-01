@@ -83,7 +83,16 @@ else
 
     # combine all the static libraries into one called v8_full
     pushd out/x64.$c
-    find . -name '*.a' -exec ar -x '{}' ';'
+
+    echo "Combining following .a files:"
+    if [ -z "$SHARED_PLEASE" ]; then
+      find . -name '*.a'
+      find . -name '*.a' -exec ar -x '{}' ';'
+    else
+      # User will get rest from libv8.so
+      find . -name 'libv8_libbase.a' -o -name 'libv8_libplatform.a'
+      find . -name 'libv8_libbase.a' -o -name 'libv8_libplatform.a' -exec ar -x '{}' ';'
+    fi
     ar -crs libv8_full.a *.o
     rm *.o
     popd
