@@ -50,7 +50,7 @@ if [ -z "$BUILD_DIR" ]; then
    exit 1
 fi
 
-configs=( "debug" "release" )
+configs="debug release"
 
 # gclient only works from the build directory
 pushd $BUILD_DIR
@@ -71,7 +71,7 @@ else
   make clean || true
 
   # do the build
-  for c in "${configs[@]}"; do
+  for c in $configs; do
     if ! [ -z "$SHARED_PLEASE" ]; then
       case $UNAME in
       Darwin) echo "don't forget to use install_name_tool to set the install_name of each dylib when installing";;
@@ -80,28 +80,13 @@ else
 
     make -j2 x64.$c V=1 $SHARED_PLEASE
     make -j2 x64.$c V=1 $SHARED_PLEASE
-
-    # combine all the static libraries into one called v8_full
-    pushd out/x64.$c
-
-    echo "Combining following .a files:"
-    if [ -z "$SHARED_PLEASE" ]; then
-      find . -name '*.a'
-      find . -name '*.a' -exec ar -x '{}' ';'
-    else
-      # User will get rest from libv8.so
-      find . -name 'libv8_libbase.a' -o -name 'libv8_libplatform.a'
-      find . -name 'libv8_libbase.a' -o -name 'libv8_libplatform.a' -exec ar -x '{}' ';'
-    fi
-    ar -crs libv8_full.a *.o
-    rm *.o
-    popd
   done
 
   if [ $UNAME = 'Darwin' ]; then
     # move default libstdc++ builds aside
-    mv out/x64.debug out/x64.debug.libstdc++
-    mv out/x64.release out/x64.release.libstdc++
+    for c in $configs; do
+      mv out/x64.$c out/x64.$c.libstdc++
+    done
 
     unset CXXFLAGS
     unset CFLAGS
@@ -111,21 +96,15 @@ else
     make clean || true
 
     # do the build
-    for c in "${configs[@]}"; do
+    for c in $configs; do
       make -j2 x64.$c V=1 $SHARED_PLEASE
       make -j2 x64.$c V=1 $SHARED_PLEASE
-
-      # combine all the static libraries into one called v8_full
-      pushd out/x64.$c
-      find . -name '*.a' -exec ar -x '{}' ';'
-      ar -crs libv8_full.a *.o
-      rm *.o
-      popd
     done
 
     # move builds aside
-    mv out/x64.debug out/x64.debug.libc++
-    mv out/x64.release out/x64.release.libc++
+    for c in $configs; do
+      mv out/x64.$c out/x64.$c.libc++
+    done
   fi
   popd # v8
 fi

@@ -24,14 +24,18 @@ OPTIONS:
    -h   Show this message
    -d   Top level build dir
    -r   Revision represented as a git tag version i.e. 4.5.73
+   -S   Generate shared libv8 library (avoids crashes when multiple units link against it)
 EOF
 }
 
-while getopts :d:r: OPTION
+while getopts :d:r:S OPTION
 do
    case $OPTION in
        d)
            BUILD_DIR=$OPTARG
+           ;;
+       S)
+           SHARED_PLEASE=1
            ;;
        r)
            REVISION=$OPTARG
@@ -67,11 +71,16 @@ else
 fi
 
 # create directory structure
+rm -rf $BUILDLABEL
 mkdir -p $BUILDLABEL/bin $BUILDLABEL/include $BUILDLABEL/lib
 
-# find and copy everything that is not a library into bin
-find v8/out/x64.release* -maxdepth 1 -type f \
+# find and copy everything that is not a library or object file into bin
+find `ls -d v8/out/x64.* | tail -n 1` -maxdepth 1 -type f \
   -not -name *.so -not -name *.a -not -name *.jar -not -name *.lib \
+  -not -name '*.o' \
+  -not -name '*.obj' \
+  -not -name '*.lock' \
+  -not -name '*.d' \
   -not -name *.dylib \
   -not -name *.isolated \
   -not -name *.state \
@@ -96,19 +105,29 @@ mv $BUILDLABEL/include/v8/include/* $BUILDLABEL/include
 rm -rf $BUILDLABEL/include/v8
 
 # find and copy libraries
-find v8/out -maxdepth 3 \( -name *.so -o -name '*.dylib' -o -name *v8_full* -o -name *.jar \) \
-  -exec $CP --parents '{}' $BUILDLABEL/lib ';'
-# shared library is awkwardly in a lib.target subdirectory
-for d in $BUILDLABEL/lib/v8/out/*
+# https://groups.google.com/forum/#!topic/v8-users/KhniGgixxGM
+# says embedders like us should, beyond the shared libv8, also
+# link to v8_libplatform (which needs v8_libbase)
+LIBS="v8_libplatform v8_libbase v8"
+if [ -z "$SHARED_PLEASE" ]; then
+   LIBS="$LIBS libv8_base libv8_external_snapshot"
+fi
+for INDIR in v8/out/x64.*
 do
-    mv $d/lib.target/* $d || true
-    rmdir $d/lib.target
+  OUTDIR=$BUILDLABEL/lib/`basename $INDIR`
+  mkdir -p ${OUTDIR}
+  for lib in $LIBS
+  do
+     find $INDIR -name "*${lib}.*" \
+        -not -name '*.obj' \
+        -not -name '*.o' \
+        -not -name '*.d' \
+        -exec $CP '{}' $OUTDIR ';'
+  done
 done
-find $BUILDLABEL -name '*.so' -ls
-mv $BUILDLABEL/lib/v8/out/* $BUILDLABEL/lib
-rmdir $BUILDLABEL/lib/v8/out $BUILDLABEL/lib/v8
 
 # zip up the package
+rm -rf $BUILDLABEL.zip
 if [ $UNAME = 'Windows' ]; then
   $DEPOT_TOOLS/win_toolchain/7z/7z.exe a -tzip $BUILDLABEL.zip $BUILDLABEL
 else

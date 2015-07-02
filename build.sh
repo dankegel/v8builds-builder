@@ -79,7 +79,7 @@ if ! [ -z "$opt_pickle" ]; then
 fi
 $DIR/patch.sh $SHARED_PLEASE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/patch.log
 $DIR/compile.sh $SHARED_PLEASE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/compile.log
-$DIR/package.sh -r $REVISION -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/package.log
+$DIR/package.sh $SHARED_PLEASE -d $BUILD_DIR -r $REVISION 2>&1 | tee $BUILD_DIR/package.log
 
 # for extensibility
 if [ -f $DIR/build.local ]; then
