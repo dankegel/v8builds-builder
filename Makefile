@@ -9,7 +9,7 @@ PREFIX = /opt/v8builds
 # here to make debuild happy, and debuild likes all such info to live in
 # the source tree.
 
-VERSION = 4.5.76
+VERSION = 4.2.77
 
 API = $(VERSION)
 ABI = $(basename $(API))
