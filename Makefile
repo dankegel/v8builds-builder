@@ -33,7 +33,7 @@ PICKLE :=  v8-$(TARGET_OS)-$(VERSION)-pickled.tgz
 
 all:
 	echo "Assuming you've already run "
-	echo "  sh build.sh -p $(PICKLE) -r $(VERSION)"
+	echo "  bash build.sh -p $(PICKLE) -r $(VERSION)"
 	echo "to download the source tarball."
 	# Use -S since large apps that use v8 tend to explode with
 	# violations of the ODR if v8 isn't a shared library.
