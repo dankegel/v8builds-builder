@@ -25,15 +25,20 @@ OPTIONS:
    -h    Show this message
    -r    Revision represented as a git tag version i.e. 4.5.73 (optional, builds latest version if omitted)
    -S    Generate shared libv8 library (avoids crashes when multiple units link against it)
+   -c C  build configurations C1[,C2,...]
+         linux configs: (release|debug)
+         mac configs: (release|debug).(libc++|libstdc++)
    -p TB pickle clean source tree to given tarball after downloading, don't actually build
    -P TB unpickle clean source tree from given tarball instead of using fetch
 EOF
 }
 
-while getopts :Sr:p:P: OPTION
+while getopts :Sc:r:p:P: OPTION
 do
    case $OPTION in
        S)  SHARED_PLEASE=-S
+           ;;
+       c)  configs=$OPTARG
            ;;
        r)
            REVISION=$OPTARG
@@ -78,7 +83,7 @@ if ! [ -z "$opt_pickle" ]; then
    exit 0
 fi
 $DIR/patch.sh $SHARED_PLEASE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/patch.log
-$DIR/compile.sh $SHARED_PLEASE -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/compile.log
+$DIR/compile.sh $SHARED_PLEASE -c $configs -d $BUILD_DIR 2>&1 | tee $BUILD_DIR/compile.log
 $DIR/package.sh $SHARED_PLEASE -d $BUILD_DIR -r $REVISION 2>&1 | tee $BUILD_DIR/package.log
 
 # for extensibility

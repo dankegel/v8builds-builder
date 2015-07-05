@@ -1,5 +1,5 @@
-#!/bin/bash
-set -eo pipefail
+#!/bin/sh
+set -e
 set -x
 
 # This compiles a single build
@@ -7,8 +7,9 @@ set -x
 # win deps: gclient, ninja
 # lin deps: gclient, ninja
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source $DIR/environment.sh
+DIR=`dirname $0`
+DIR=`cd $DIR; pwd`
+. $DIR/environment.sh
 
 usage ()
 {
@@ -23,12 +24,17 @@ OPTIONS:
    -h   Show this message
    -d   Top level build dir
    -S   Generate shared libv8 library (avoids crashes when multiple units link against it)
+   -c C build configurations C1[,C2,...]
+        linux configs: (release|debug)
+        mac configs: (release|debug).(libc++|libstdc++)
 EOF
 }
 
-while getopts :Sd: OPTION
+while getopts :Sc:d: OPTION
 do
     case $OPTION in
+       c)  configs=$OPTARG
+           ;;
        # can't build icu static and v8 shared, so just turn icu off for now to avoid conflicting with system icu
        # Right fix would be to either build icu static or, better, use system icu.
        S)
@@ -50,63 +56,59 @@ if [ -z "$BUILD_DIR" ]; then
    exit 1
 fi
 
-configs="debug release"
-
-# gclient only works from the build directory
-pushd $BUILD_DIR
-
 if [ $UNAME = 'Windows' ]; then
   echo "TBD"
-else
-  # linux and osx
+  exit 1
+fi
 
-  pushd v8
+cd $BUILD_DIR/v8
 
-  # Need to export a few flags only on linux
+for config in `echo $configs | tr ',' ' '`
+do
+  make clean || true
+
+  unset CFLAGS
+  unset CXXFLAGS
+  unset debrel
+  unset GYP_DEFINES
+  unset libc
+  unset LINK
+
+  case $config in
+  *debug*)   debrel=debug;;
+  *release*) debrel=release;;
+  *)  echo "bad configuration $config, expected it to contain debug or release; exit 1;;
+  esac
+
+  if [ $UNAME = 'Darwin' ]; then
+  case $config in
+  *libc++*)    libc=libc++;;
+  *libstdc++*) libc=libstdc++;;
+  *)  echo "bad configuration $config, expected it to contain libc++ or libstdc++; exit 1;;
+  esac
+
   if [ $UNAME = 'Linux' ]; then
     export CXXFLAGS="-fPIC -Wno-format-pedantic"
     export CFLAGS="-fPIC -Wno-format-pedantic"
   fi
-
-  make clean || true
-
-  # do the build
-  for c in $configs; do
-    if ! [ -z "$SHARED_PLEASE" ]; then
-      case $UNAME in
-      Darwin) echo "don't forget to use install_name_tool to set the install_name of each dylib when installing";;
-      esac
-    fi
-
-    make -j2 x64.$c V=1 $SHARED_PLEASE
-    make -j2 x64.$c V=1 $SHARED_PLEASE
-  done
-
   if [ $UNAME = 'Darwin' ]; then
-    # move default libstdc++ builds aside
-    for c in $configs; do
-      mv out/x64.$c out/x64.$c.libstdc++
-    done
-
-    unset CXXFLAGS
-    unset CFLAGS
-    export CXX="clang++ -std=c++11 -stdlib=libc++"
-    export LINK="clang++ -std=c++11 -stdlib=libc++"
+    case $libc in
+    libc++)
+       export CXX="clang++  -stdlib=libc++"
+       export LINK="clang++ -stdlib=libc++"
+       ;;
+    libstdc++)
+       export CXX="clang++  -stdlib=libstdc++"
+       export LINK="clang++ -stdlib=libstdc++"
+       ;;
+    esac
     export GYP_DEFINES="clang=1 mac_deployment_target=10.9"
-    make clean || true
-
-    # do the build
-    for c in $configs; do
-      make -j2 x64.$c V=1 $SHARED_PLEASE
-      make -j2 x64.$c V=1 $SHARED_PLEASE
-    done
-
-    # move builds aside
-    for c in $configs; do
-      mv out/x64.$c out/x64.$c.libc++
-    done
   fi
-  popd # v8
-fi
 
-popd
+  make -j2 x64.$debrel V=1 $SHARED_PLEASE
+  # Used to run make twice here -- was that to fix some parallel build problem?
+
+  if test $debrel != $config; then
+    mv out/x64.$debrel out/x64.$config
+  fi
+done

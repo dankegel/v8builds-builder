@@ -1,8 +1,9 @@
-#!/bin/bash
+# This is meant to be sourced by another shell script, not executed by itself, so the first line should not start with #!.
 
 # These are some common environment variables
 
-ENVDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ENVDIR=`dirname $0`
+ENVDIR=`cd $ENVDIR; pwd`
 
 export PROJECT_NAME=v8builds
 export REPO_URL="https://chromium.googlesource.com/v8/v8.git"
@@ -48,5 +49,5 @@ fi
 
 # for extensibility
 if [ -f $ENVDIR/environment.local ]; then
-  source $ENVDIR/environment.local
+  . $ENVDIR/environment.local
 fi

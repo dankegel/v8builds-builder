@@ -10,6 +10,7 @@ PREFIX = /opt/v8builds
 # the source tree.
 
 VERSION = 4.2.77
+CONFIGS = release,debug
 
 API = $(VERSION)
 ABI = $(basename $(API))
@@ -36,7 +37,7 @@ all:
 	echo "to download the source tarball."
 	# Use -S since large apps that use v8 tend to explode with
 	# violations of the ODR if v8 isn't a shared library.
-	bash build.sh -S -P $(PICKLE) -r $(VERSION)
+	bash build.sh -S -c $(CONFIGS) -P $(PICKLE) -r $(VERSION)
 
 .PHONY: clean
 
